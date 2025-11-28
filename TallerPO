@@ -1,0 +1,623 @@
+from abc import ABC, abstractmethod
+from datetime import datetime, timedelta
+from typing import List, Dict
+
+class Vuelo(ABC):
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, 
+                 fecha_hora: datetime, aerolinea: str, capacidad_maxima: int = 200):
+        self.__numero_vuelo = numero_vuelo
+        self.__origen = origen
+        self.__destino = destino
+        self.__fecha_hora = fecha_hora
+        self.__aerolinea = aerolinea
+        self._pasajeros_registrados = []
+        self.__capacidad_maxima = capacidad_maxima
+    
+    # Getters para información protegida
+    @property
+    def numero_vuelo(self):
+        return self.__numero_vuelo
+    
+    @property
+    def origen(self):
+        return self.__origen
+    
+    @property
+    def destino(self):
+        return self.__destino
+    
+    @property
+    def fecha_hora(self):
+        return self.__fecha_hora
+    
+    @property
+    def aerolinea(self):
+        return self.__aerolinea
+    
+    @abstractmethod
+    def calcular_tarifa_base(self):
+        pass
+    
+    @abstractmethod
+    def obtener_documentos_requeridos(self):
+        pass
+    
+    def registrar_pasajero(self, pasajero):
+        if self.__validar_capacidad():
+            self._pasajeros_registrados.append(pasajero)
+            return True
+        return False
+    
+    def __validar_capacidad(self):
+        return len(self._pasajeros_registrados) < self.__capacidad_maxima
+    
+    def obtener_pasajeros_registrados(self):
+        return len(self._pasajeros_registrados)
+    
+    def obtener_ingresos_proyectados(self):
+        return self.calcular_tarifa_base() * self.obtener_pasajeros_registrados()
+
+
+class VueloDomestico(Vuelo):
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, 
+                 fecha_hora: datetime, aerolinea: str, duracion_horas: float, 
+                 escala: bool, tarifa_economica: float = 100):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea)
+        self.duracion_horas = duracion_horas
+        self.escala = escala
+        self.tarifa_economica = tarifa_economica
+    
+    def calcular_tarifa_base(self):
+        tarifa = self.tarifa_economica
+        if self.escala:
+            tarifa *= 1.2  # 20% más por escala
+        return tarifa
+    
+    def obtener_documentos_requeridos(self):
+        return ["DNI", "Tarjeta de embarque"]
+
+
+class VueloInternacional(Vuelo):
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, 
+                 fecha_hora: datetime, aerolinea: str, pais_destino: str, 
+                 visa_requerida: bool, tarifa_internacional: float = 500):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea)
+        self.pais_destino = pais_destino
+        self.visa_requerida = visa_requerida
+        self.tarifa_internacional = tarifa_internacional
+    
+    def calcular_tarifa_base(self):
+        tarifa = self.tarifa_internacional
+        if self.visa_requerida:
+            tarifa *= 1.1  # 10% más si requiere visa
+        return tarifa
+    
+    def obtener_documentos_requeridos(self):
+        documentos = ["Pasaporte", "Tarjeta de embarque"]
+        if self.visa_requerida:
+            documentos.append("Visa")
+        return documentos
+
+
+class VueloCarga(Vuelo):
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, 
+                 fecha_hora: datetime, aerolinea: str, peso_carga_kg: float, 
+                 tipo_mercancia: str, tarifa_por_kg: float = 10):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea, capacidad_maxima=10000)
+        self.peso_carga_kg = peso_carga_kg
+        self.tipo_mercancia = tipo_mercancia
+        self.tarifa_por_kg = tarifa_por_kg
+    
+    def calcular_tarifa_base(self):
+        return self.peso_carga_kg * self.tarifa_por_kg
+    
+    def obtener_documentos_requeridos(self):
+        return ["Manifiesto de carga", "Certificado de origen", "Permisos de importación/exportación"]
+    
+    def registrar_carga(self, peso_kg: float, descripcion: str):
+        if self.peso_carga_kg + peso_kg <= 10000:  # Capacidad máxima en kg
+            self.peso_carga_kg += peso_kg
+            return True
+        return False
+
+
+class VueloPrivado(Vuelo):
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, 
+                 fecha_hora: datetime, aerolinea: str, cliente: str, 
+                 tipo_avion: str, tarifa_charter: float = 5000):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea, capacidad_maxima=20)
+        self.cliente = cliente
+        self.tipo_avion = tipo_avion
+        self.tarifa_charter = tarifa_charter
+    
+    def calcular_tarifa_base(self):
+        return self.tarifa_charter
+    
+    def obtener_documentos_requeridos(self):
+        return ["Documentación del cliente VIP", "Permisos de vuelo privado"]
+
+
+
+class Pasajero(ABC):
+    def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int):
+        self.__nombre = nombre
+        self.__pasaporte = pasaporte
+        self.__nacionalidad = nacionalidad
+        self.__edad = edad
+        self._equipaje = []
+    
+    # Getters para datos privados
+    @property
+    def nombre(self):
+        return self.__nombre
+    
+    @property
+    def pasaporte(self):
+        return self.__pasaporte
+    
+    @property
+    def nacionalidad(self):
+        return self.__nacionalidad
+    
+    @property
+    def edad(self):
+        return self.__edad
+    
+    @abstractmethod
+    def calcular_costo_total(self):
+        pass
+    
+    @abstractmethod
+    def obtener_beneficios(self):
+        pass
+    
+    def agregar_equipaje(self, maleta: Dict):
+        if self.__validar_peso_equipaje(maleta.get('peso_kg', 0)):
+            self._equipaje.append(maleta)
+            return True
+        return False
+    
+    def __validar_peso_equipaje(self, peso: float):
+        return peso <= 32  # Peso máximo por maleta
+    
+    def __calcular_impuestos(self, tarifa_base: float):
+        return tarifa_base * 0.18  # 18% de impuestos
+    
+    def obtener_total_equipaje(self):
+        return len(self._equipaje)
+
+
+class PasajeroEconomico(Pasajero):
+    def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int,
+                 asiento_estandar: str, equipaje_basico: int = 1, comida_pago: bool = True):
+        super().__init__(nombre, pasaporte, nacionalidad, edad)
+        self.asiento_estandar = asiento_estandar
+        self.equipaje_basico = equipaje_basico
+        self.comida_pago = comida_pago
+    
+    def calcular_costo_total(self):
+        tarifa_base = 100
+        costo_equipaje = max(0, self.obtener_total_equipaje() - self.equipaje_basico) * 30
+        costo_comida = 15 if self.comida_pago else 0
+        total = tarifa_base + costo_equipaje + costo_comida
+        return total + self._Pasajero__calcular_impuestos(total)
+    
+    def obtener_beneficios(self):
+        beneficios = ["Asiento estándar", f"{self.equipaje_basico} maleta(s) incluida(s)"]
+        if not self.comida_pago:
+            beneficios.append("Comida incluida")
+        return beneficios
+
+
+class PasajeroEjecutivo(Pasajero):
+    def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int,
+                 asiento_reclinable: str, equipaje_extra: int = 2, comida_incluida: bool = True):
+        super().__init__(nombre, pasaporte, nacionalidad, edad)
+        self.asiento_reclinable = asiento_reclinable
+        self.equipaje_extra = equipaje_extra
+        self.comida_incluida = comida_incluida
+    
+    def calcular_costo_total(self):
+        tarifa_base = 300
+        costo_equipaje = max(0, self.obtener_total_equipaje() - self.equipaje_extra) * 20
+        total = tarifa_base + costo_equipaje
+        return total + self._Pasajero__calcular_impuestos(total)
+    
+    def obtener_beneficios(self):
+        beneficios = ["Asiento reclinable", "Acceso prioritario", 
+                     f"{self.equipaje_extra} maletas incluidas"]
+        if self.comida_incluida:
+            beneficios.append("Comida gourmet incluida")
+        return beneficios
+
+
+class PasajeroPrimeraClase(Pasajero):
+    def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int,
+                 suite_privada: bool = True, todo_incluido: bool = True, 
+                 prioridad_total: bool = True):
+        super().__init__(nombre, pasaporte, nacionalidad, edad)
+        self.suite_privada = suite_privada
+        self.todo_incluido = todo_incluido
+        self.prioridad_total = prioridad_total
+    
+    def calcular_costo_total(self):
+        tarifa_base = 800
+        return tarifa_base + self._Pasajero__calcular_impuestos(tarifa_base)
+    
+    def obtener_beneficios(self):
+        beneficios = ["Suite privada", "Servicio personalizado", "Equipaje ilimitado"]
+        if self.todo_incluido:
+            beneficios.extend(["Comida gourmet", "Bebidas premium", "Entretenimiento a bordo"])
+        if self.prioridad_total:
+            beneficios.extend(["Check-in prioritario", "Embarque prioritario", "Desembarque prioritario"])
+        return beneficios
+
+
+class Tripulacion(Pasajero):
+    def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int,
+                 rol: str, aerolinea: str):
+        super().__init__(nombre, pasaporte, nacionalidad, edad)
+        self.rol = rol
+        self.aerolinea = aerolinea
+    
+    def calcular_costo_total(self):
+        return 0  # Sin costo para tripulación
+    
+    def obtener_beneficios(self):
+        return ["Vuelo gratuito", "Alojamiento en destino", "Dieta de viaje"]
+
+
+
+class ServicioAeropuerto(ABC):
+    def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: str):
+        self.__codigo_servicio = codigo_servicio
+        self.__ubicacion = ubicacion
+        self.__horario_apertura = horario_apertura
+        self._clientes_atendidos = 0
+    
+    @property
+    def codigo_servicio(self):
+        return self.__codigo_servicio
+    
+    @property
+    def ubicacion(self):
+        return self.__ubicacion
+    
+    @property
+    def horario_apertura(self):
+        return self.__horario_apertura
+    
+    @abstractmethod
+    def calcular_tarifa(self):
+        pass
+    
+    @abstractmethod
+    def verificar_disponibilidad(self):
+        pass
+    
+    def registrar_uso(self, cliente: str):
+        self._clientes_atendidos += 1
+        return f"Cliente {cliente} registrado en {self.__class__.__name__}"
+    
+    def obtener_clientes_atendidos(self):
+        return self._clientes_atendidos
+
+
+class SalaVIP(ServicioAeropuerto):
+    def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: str,
+                 capacidad: int, servicios_incluidos: List[str], acceso_ilimitado: bool = False):
+        super().__init__(codigo_servicio, ubicacion, horario_apertura)
+        self.capacidad = capacidad
+        self.servicios_incluidos = servicios_incluidos
+        self.acceso_ilimitado = acceso_ilimitado
+        self.__tarifa_fija = 50
+    
+    def calcular_tarifa(self):
+        return self.__tarifa_fija
+    
+    def verificar_disponibilidad(self):
+        return self._clientes_atendidos < self.capacidad
+    
+    def __calcular_tiempo_uso(self, hora_entrada: datetime, hora_salida: datetime):
+        return (hora_salida - hora_entrada).total_seconds() / 3600  # Horas
+
+
+class Estacionamiento(ServicioAeropuerto):
+    def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: str,
+                 tipo_vehiculo: str, horas: float, zona: str):
+        super().__init__(codigo_servicio, ubicacion, horario_apertura)
+        self.tipo_vehiculo = tipo_vehiculo
+        self.horas = horas
+        self.zona = zona
+        self.__tarifas = {
+            "automovil": 5,
+            "moto": 3,
+            "camioneta": 8
+        }
+    
+    def calcular_tarifa(self):
+        tarifa_base = self.__tarifas.get(self.tipo_vehiculo, 5)
+        return tarifa_base * self.horas
+    
+    def verificar_disponibilidad(self):
+        # Simulamos disponibilidad basada en la zona
+        zonas_disponibles = ["A", "B", "C"]
+        return self.zona in zonas_disponibles and self.horas <= 24 * 7  # Máximo 1 semana
+
+
+class CambioMoneda(ServicioAeropuerto):
+    def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: str,
+                 moneda_origen: str, moneda_destino: str, tasa_cambio: float, 
+                 comision: float = 0.05):
+        super().__init__(codigo_servicio, ubicacion, horario_apertura)
+        self.moneda_origen = moneda_origen
+        self.moneda_destino = moneda_destino
+        self.tasa_cambio = tasa_cambio
+        self.comision = comision
+    
+    def calcular_tarifa(self, monto: float):
+        return monto * self.comision
+    
+    def realizar_cambio(self, monto: float):
+        comision = self.calcular_tarifa(monto)
+        monto_convertido = (monto - comision) * self.tasa_cambio
+        return monto_convertido, comision
+    
+    def verificar_disponibilidad(self):
+        # Disponible durante horario de apertura
+        hora_actual = datetime.now().strftime("%H:%M")
+        return hora_actual >= self.horario_apertura
+
+
+class DutyFree(ServicioAeropuerto):
+    def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: str,
+                 productos: List[str], descuento_impuestos: float = 0.20, 
+                 restriccion_vuelo: str = "internacional"):
+        super().__init__(codigo_servicio, ubicacion, horario_apertura)
+        self.productos = productos
+        self.descuento_impuestos = descuento_impuestos
+        self.restriccion_vuelo = restriccion_vuelo
+    
+    def calcular_tarifa(self, producto: str, precio_original: float):
+        if producto in self.productos:
+            return precio_original * (1 - self.descuento_impuestos)
+        return precio_original
+    
+    def verificar_disponibilidad(self, tipo_vuelo: str):
+        return tipo_vuelo.lower() == self.restriccion_vuelo.lower()
+
+
+
+
+class EmpleadoAeropuerto(ABC):
+    def __init__(self, nombre: str, codigo: str, area: str, turno: str):
+        self.__nombre = nombre
+        self.__codigo = codigo
+        self.__area = area
+        self.__turno = turno
+        self._certificaciones = []
+    
+    @property
+    def nombre(self):
+        return self.__nombre
+    
+    @property
+    def codigo(self):
+        return self.__codigo
+    
+    @property
+    def area(self):
+        return self.__area
+    
+    @property
+    def turno(self):
+        return self.__turno
+    
+    @abstractmethod
+    def calcular_salario(self):
+        pass
+    
+    @abstractmethod
+    def realizar_tarea_principal(self):
+        pass
+    
+    def registrar_turno(self, nuevo_turno: str):
+        self.__turno = nuevo_turno
+        return f"Turno actualizado a: {nuevo_turno}"
+    
+    def agregar_certificacion(self, certificacion: str):
+        self._certificaciones.append(certificacion)
+    
+    def __calcular_bono_turno(self, salario_base: float):
+        if self.__turno.lower() == "nocturno":
+            return salario_base * 0.25  # 25% bono por turno nocturno
+        elif self.__turno.lower() == "mixto":
+            return salario_base * 0.15  # 15% bono por turno mixto
+        return 0
+
+
+class AgenteCheckIn(EmpleadoAeropuerto):
+    def __init__(self, nombre: str, codigo: str, area: str, turno: str,
+                 counter_asignado: str, aerolineas: List[str], idiomas: List[str]):
+        super().__init__(nombre, codigo, area, turno)
+        self.counter_asignado = counter_asignado
+        self.aerolineas = aerolineas
+        self.idiomas = idiomas
+        self.__salario_base = 2000
+    
+    def calcular_salario(self):
+        bono_idiomas = len(self.idiomas) * 100
+        bono_turno = self._EmpleadoAeropuerto__calcular_bono_turno(self.__salario_base)
+        return self.__salario_base + bono_idiomas + bono_turno
+    
+    def realizar_tarea_principal(self):
+        return f"Realizando check-in en counter {self.counter_asignado} para aerolíneas: {', '.join(self.aerolineas)}"
+
+
+class AgenteSeguridad(EmpleadoAeropuerto):
+    def __init__(self, nombre: str, codigo: str, area: str, turno: str,
+                 zona_asignada: str, equipos: List[str], nivel_seguridad: int):
+        super().__init__(nombre, codigo, area, turno)
+        self.zona_asignada = zona_asignada
+        self.equipos = equipos
+        self.nivel_seguridad = nivel_seguridad
+        self.__salario_base = 2500
+    
+    def calcular_salario(self):
+        bono_equipos = len(self.equipos) * 50
+        bono_seguridad = self.nivel_seguridad * 100
+        bono_turno = self._EmpleadoAeropuerto__calcular_bono_turno(self.__salario_base)
+        return self.__salario_base + bono_equipos + bono_seguridad + bono_turno
+    
+    def realizar_tarea_principal(self):
+        return f"Realizando controles de seguridad en zona {self.zona_asignada} con equipos: {', '.join(self.equipos)}"
+
+
+class OficialMigracion(EmpleadoAeropuerto):
+    def __init__(self, nombre: str, codigo: str, area: str, turno: str,
+                 pasaportes_procesados: int, idiomas: List[str], turno_rotativo: bool = True):
+        super().__init__(nombre, codigo, area, turno)
+        self.pasaportes_procesados = pasaportes_procesados
+        self.idiomas = idiomas
+        self.turno_rotativo = turno_rotativo
+        self.__salario_base = 3000
+    
+    def calcular_salario(self):
+        bono_idiomas = len(self.idiomas) * 150
+        bono_eficiencia = min(self.pasaportes_procesados // 100, 500)  # Máximo 500 de bono
+        bono_turno = self._EmpleadoAeropuerto__calcular_bono_turno(self.__salario_base)
+        if self.turno_rotativo:
+            bono_turno += 200  # Bono adicional por turno rotativo
+        return self.__salario_base + bono_idiomas + bono_eficiencia + bono_turno
+    
+    def realizar_tarea_principal(self):
+        return f"Procesando documentación migratoria. Pasaportes procesados: {self.pasaportes_procesados}"
+
+
+class Mantenimiento(EmpleadoAeropuerto):
+    def __init__(self, nombre: str, codigo: str, area: str, turno: str,
+                 area_tecnica: str, especialidad: str, disponibilidad_24h: bool = False):
+        super().__init__(nombre, codigo, area, turno)
+        self.area_tecnica = area_tecnica
+        self.especialidad = especialidad
+        self.disponibilidad_24h = disponibilidad_24h
+        self.__salario_base = 2200
+    
+    def calcular_salario(self):
+        bono_especialidad = 300 if self.especialidad in ["aviones", "sistemas"] else 150
+        bono_disponibilidad = 400 if self.disponibilidad_24h else 0
+        bono_turno = self._EmpleadoAeropuerto__calcular_bono_turno(self.__salario_base)
+        return self.__salario_base + bono_especialidad + bono_disponibilidad + bono_turno
+    
+    def realizar_tarea_principal(self):
+        return f"Realizando mantenimiento en área {self.area_tecnica}. Especialidad: {self.especialidad}"
+
+
+def demostrar_sistema():
+    print("=" * 80)
+    print("SISTEMA DE AEROPUERTO - DEMOSTRACIÓN COMPLETA")
+    print("=" * 80)
+    
+    # EJERCICIO 12.1: TIPOS DE VUELOS
+    print("\n1. TIPOS DE VUELOS")
+    print("-" * 40)
+    
+    # Crear vuelos de cada tipo
+    vuelo_domestico = VueloDomestico("AA123", "Lima", "Cusco", datetime.now(), "AeroPerú", 1.5, False)
+    vuelo_internacional = VueloInternacional("IB456", "Lima", "Madrid", datetime.now(), "Iberia", "España", True)
+    vuelo_carga = VueloCarga("CA789", "Lima", "Miami", datetime.now(), "CargoAir", 5000, "Electrónicos")
+    vuelo_privado = VueloPrivado("PV001", "Lima", "New York", datetime.now(), "PrivateJet", "Empresa XYZ", "Gulfstream G650")
+    
+    vuelos = [vuelo_domestico, vuelo_internacional, vuelo_carga, vuelo_privado]
+    
+    for vuelo in vuelos:
+        print(f"\nVuelo: {vuelo.numero_vuelo}")
+        print(f"Tipo: {vuelo.__class__.__name__}")
+        print(f"Ruta: {vuelo.origen} -> {vuelo.destino}")
+        print(f"Tarifa base: ${vuelo.calcular_tarifa_base():.2f}")
+        print(f"Documentos requeridos: {', '.join(vuelo.obtener_documentos_requeridos())}")
+    
+    # EJERCICIO 12.2: CLASES DE PASAJEROS
+    print("\n\n2. CLASES DE PASAJEROS")
+    print("-" * 40)
+    
+    # Crear pasajeros de cada tipo
+    pasajero_economico = PasajeroEconomico("Juan Pérez", "P123456", "Peruano", 30, "15A")
+    pasajero_ejecutivo = PasajeroEjecutivo("María García", "G789012", "Española", 35, "2B")
+    pasajero_primera = PasajeroPrimeraClase("Carlos López", "L345678", "Mexicano", 45)
+    tripulante = Tripulacion("Ana Rodríguez", "R901234", "Colombiana", 28, "Comandante", "AeroPerú")
+    
+    pasajeros = [pasajero_economico, pasajero_ejecutivo, pasajero_primera, tripulante]
+    
+    # Agregar equipaje
+    for pasajero in pasajeros:
+        pasajero.agregar_equipaje({"tipo": "maleta", "peso_kg": 20})
+        if isinstance(pasajero, PasajeroEjecutivo):
+            pasajero.agregar_equipaje({"tipo": "maleta", "peso_kg": 15})
+    
+    for pasajero in pasajeros:
+        print(f"\nPasajero: {pasajero.nombre}")
+        print(f"Tipo: {pasajero.__class__.__name__}")
+        print(f"Costo total: ${pasajero.calcular_costo_total():.2f}")
+        print(f"Beneficios: {', '.join(pasajero.obtener_beneficios())}")
+        print(f"Equipaje: {pasajero.obtener_total_equipaje()} maletas")
+    
+    # EJERCICIO 12.3: SERVICIOS AEROPORTUARIOS
+    print("\n\n3. SERVICIOS AEROPORTUARIOS")
+    print("-" * 40)
+    
+    sala_vip = SalaVIP("SV001", "Terminal 1", "06:00", 50, ["WiFi", "Comida", "Bebidas"], True)
+    estacionamiento = Estacionamiento("ES001", "Parking A", "24/7", "automovil", 24, "A")
+    cambio_moneda = CambioMoneda("CM001", "Hall Principal", "08:00", "USD", "EUR", 0.85)
+    duty_free = DutyFree("DF001", "Terminal Internacional", "06:00", ["perfumes", "licores", "electrónicos"])
+    
+    servicios = [sala_vip, estacionamiento, cambio_moneda, duty_free]
+    
+    for servicio in servicios:
+        print(f"\nServicio: {servicio.__class__.__name__}")
+        print(f"Ubicación: {servicio.ubicacion}")
+        if isinstance(servicio, SalaVIP):
+            print(f"Tarifa: ${servicio.calcular_tarifa():.2f}")
+        elif isinstance(servicio, Estacionamiento):
+            print(f"Tarifa: ${servicio.calcular_tarifa():.2f}")
+        print(f"Disponible: {servicio.verificar_disponibilidad()}")
+    
+    # EJERCICIO 12.4: PERSONAL AEROPORTUARIO
+    print("\n\n4. PERSONAL AEROPORTUARIO")
+    print("-" * 40)
+    
+    agente_checkin = AgenteCheckIn("Laura Martínez", "EMP001", "Check-In", "diurno", "Counter 5", ["AeroPerú", "LATAM"], ["español", "inglés"])
+    agente_seguridad = AgenteSeguridad("Pedro González", "EMP002", "Seguridad", "nocturno", "Control 3", ["scanner", "detector"], 3)
+    oficial_migracion = OficialMigracion("Sofia Ramírez", "EMP003", "Migración", "mixto", 1500, ["español", "inglés", "francés"], True)
+    tecnico_mantenimiento = Mantenimiento("Roberto Silva", "EMP004", "Mantenimiento", "nocturno", "Hangar 2", "aviones", True)
+    
+    empleados = [agente_checkin, agente_seguridad, oficial_migracion, tecnico_mantenimiento]
+    
+    for empleado in empleados:
+        print(f"\nEmpleado: {empleado.nombre}")
+        print(f"Cargo: {empleado.__class__.__name__}")
+        print(f"Salario: ${empleado.calcular_salario():.2f}")
+        print(f"Tarea principal: {empleado.realizar_tarea_principal()}")
+    
+    # CÁLCULOS FINALES
+    print("\n\n5. ESTADÍSTICAS Y REPORTES")
+    print("-" * 40)
+    
+    # Ingresos proyectados de vuelos
+    total_ingresos_vuelos = sum(vuelo.obtener_ingresos_proyectados() for vuelo in vuelos)
+    print(f"Ingresos proyectados totales de vuelos: ${total_ingresos_vuelos:,.2f}")
+    
+    # Costos totales de pasajeros
+    total_costos_pasajeros = sum(pasajero.calcular_costo_total() for pasajero in pasajeros)
+    print(f"Costos totales de pasajeros: ${total_costos_pasajeros:,.2f}")
+    
+    # Planilla de empleados
+    total_planilla = sum(empleado.calcular_salario() for empleado in empleados)
+    print(f"Planilla mensual total: ${total_planilla:,.2f}")
+    
+    print("\n" + "=" * 80)
+    print("DEMOSTRACIÓN COMPLETADA EXITOSAMENTE")
+    print("=" * 80)
+
+if __name__ == "__main__":
+    demostrar_sistema()
