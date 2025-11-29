@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime, time
+
 class Vuelo(ABC):
     def __init__(self, numero_vuelo: str, origen: str, destino: str, fecha_hora: datetime, aerolinea: str, capacidad_maxima: int = 200):
         self.__numero_vuelo = numero_vuelo
