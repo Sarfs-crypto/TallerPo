@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from datetime import datetime, time
 
 class Vuelo(ABC):
-    def __init__(self, numero_vuelo: str, origen: str, destino: str, fecha_hora: datetime, aerolinea: str, capacidad_maxima: int = 200):
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, fecha_hora: datetime, aerolinea: str,
+                 capacidad_maxima: int = 200):
         self.__numero_vuelo = numero_vuelo
         self.__origen = origen
         self.__destino = destino
@@ -27,13 +28,18 @@ class Vuelo(ABC):
         return len(self._pasajeros_registrados) < self.__capacidad_maxima
 
     def get_numero_vuelo(self) -> str: return self.__numero_vuelo
+
     def get_origen(self) -> str: return self.__origen
+
     def get_destino(self) -> str: return self.__destino
+
     def get_pasajeros_registrados(self) -> list: return self._pasajeros_registrados.copy()
 
+
 class VueloDomestico(Vuelo):
-    def __init__(self, numero_vuelo: str, destino: str, fecha_hora: datetime, aerolinea: str, duracion_horas: float, escala: bool):
-        super().__init__(numero_vuelo, "Bogotá", destino, fecha_hora, aerolinea)
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, fecha_hora: datetime, aerolinea: str,
+                 duracion_horas: float, escala: bool):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea)
         self.duracion_horas = duracion_horas
         self.escala = escala
 
@@ -43,9 +49,11 @@ class VueloDomestico(Vuelo):
     def obtener_documentos_requeridos(self) -> list:
         return ["Cédula", "Tarjeta de embarque"]
 
+
 class VueloInternacional(Vuelo):
-    def __init__(self, numero_vuelo: str, destino: str, pais_destino: str, fecha_hora: datetime, aerolinea: str, visa_requerida: bool):
-        super().__init__(numero_vuelo, "Bogotá", destino, fecha_hora, aerolinea)
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, pais_destino: str, fecha_hora: datetime,
+                 aerolinea: str, visa_requerida: bool):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea)
         self.pais_destino = pais_destino
         self.visa_requerida = visa_requerida
 
@@ -58,9 +66,11 @@ class VueloInternacional(Vuelo):
             documentos.append("Visa")
         return documentos
 
+
 class VueloCarga(Vuelo):
-    def __init__(self, numero_vuelo: str, destino: str, fecha_hora: datetime, aerolinea: str, peso_carga_kg: float, tipo_mercancia: str):
-        super().__init__(numero_vuelo, "Bogotá", destino, fecha_hora, aerolinea, 1)
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, fecha_hora: datetime, aerolinea: str,
+                 peso_carga_kg: float, tipo_mercancia: str):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea, 1)
         self.peso_carga_kg = peso_carga_kg
         self.tipo_mercancia = tipo_mercancia
 
@@ -73,9 +83,11 @@ class VueloCarga(Vuelo):
     def registrar_pasajero(self, pasajero) -> bool:
         return False
 
+
 class VueloPrivado(Vuelo):
-    def __init__(self, numero_vuelo: str, destino: str, fecha_hora: datetime, aerolinea: str, cliente: str):
-        super().__init__(numero_vuelo, "Bogotá", destino, fecha_hora, aerolinea, 20)
+    def __init__(self, numero_vuelo: str, origen: str, destino: str, fecha_hora: datetime, aerolinea: str,
+                 cliente: str):
+        super().__init__(numero_vuelo, origen, destino, fecha_hora, aerolinea, 20)
         self.cliente = cliente
 
     def calcular_tarifa_base(self) -> float:
@@ -83,6 +95,9 @@ class VueloPrivado(Vuelo):
 
     def obtener_documentos_requeridos(self) -> list:
         return ["Identificación oficial", "Contrato de charter"]
+
+
+# ... (Las clases Pasajero, ServicioAeropuerto y EmpleadoAeropuerto se mantienen igual) ...
 
 class Pasajero(ABC):
     def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int):
@@ -108,7 +123,9 @@ class Pasajero(ABC):
         return tarifa_base * 0.18
 
     def get_nombre(self) -> str: return self.__nombre
+
     def get_pasaporte(self) -> str: return self.__pasaporte
+
 
 class PasajeroEconomico(Pasajero):
     def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int, asiento_estandar: str):
@@ -125,6 +142,7 @@ class PasajeroEconomico(Pasajero):
     def obtener_beneficios(self) -> list:
         return ["Asiento estándar", "1 equipaje de mano"]
 
+
 class PasajeroEjecutivo(Pasajero):
     def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int, asiento_reclinable: str):
         super().__init__(nombre, pasaporte, nacionalidad, edad)
@@ -137,6 +155,7 @@ class PasajeroEjecutivo(Pasajero):
     def obtener_beneficios(self) -> list:
         return ["Asiento reclinable", "Prioridad en embarque", "Comida gourmet"]
 
+
 class PasajeroPrimeraClase(Pasajero):
     def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int):
         super().__init__(nombre, pasaporte, nacionalidad, edad)
@@ -148,6 +167,7 @@ class PasajeroPrimeraClase(Pasajero):
     def obtener_beneficios(self) -> list:
         return ["Suite privada", "Chofer privado", "Equipaje ilimitado"]
 
+
 class Tripulacion(Pasajero):
     def __init__(self, nombre: str, pasaporte: str, nacionalidad: str, edad: int, rol: str):
         super().__init__(nombre, pasaporte, nacionalidad, edad)
@@ -158,6 +178,7 @@ class Tripulacion(Pasajero):
 
     def obtener_beneficios(self) -> list:
         return ["Vuelo gratuito", "Alojamiento", "Dieta por servicio"]
+
 
 class ServicioAeropuerto(ABC):
     def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: time):
@@ -180,6 +201,7 @@ class ServicioAeropuerto(ABC):
 
     def get_codigo_servicio(self) -> str: return self.__codigo_servicio
 
+
 class SalaVIP(ServicioAeropuerto):
     def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: time):
         super().__init__(codigo_servicio, ubicacion, horario_apertura)
@@ -190,6 +212,7 @@ class SalaVIP(ServicioAeropuerto):
 
     def verificar_disponibilidad(self) -> bool:
         return len(self._clientes_atendidos) < 50
+
 
 class Estacionamiento(ServicioAeropuerto):
     def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: time):
@@ -202,6 +225,7 @@ class Estacionamiento(ServicioAeropuerto):
     def verificar_disponibilidad(self) -> bool:
         return True
 
+
 class CambioMoneda(ServicioAeropuerto):
     def __init__(self, codigo_servicio: str, ubicacion: str, horario_apertura: time):
         super().__init__(codigo_servicio, ubicacion, horario_apertura)
@@ -213,12 +237,14 @@ class CambioMoneda(ServicioAeropuerto):
     def verificar_disponibilidad(self) -> bool:
         return datetime.now().time() >= self._ServicioAeropuerto__horario_apertura
 
+
 class DutyFree(ServicioAeropuerto):
     def calcular_tarifa(self) -> float:
         return 0.0
 
     def verificar_disponibilidad(self) -> bool:
         return datetime.now().time() >= self._ServicioAeropuerto__horario_apertura
+
 
 class EmpleadoAeropuerto(ABC):
     def __init__(self, nombre: str, codigo: str, area: str, turno: str):
@@ -229,10 +255,12 @@ class EmpleadoAeropuerto(ABC):
         self._certificaciones = []
 
     @abstractmethod
-    def calcular_salario(self) -> float: pass
+    def calcular_salario(self) -> float:
+        pass
 
     @abstractmethod
-    def realizar_tarea_principal(self) -> str: pass
+    def realizar_tarea_principal(self) -> str:
+        pass
 
     def registrar_turno(self, nuevo_turno: str):
         self.__turno = nuevo_turno
@@ -244,7 +272,9 @@ class EmpleadoAeropuerto(ABC):
             return salario_base * 0.15
         return 0.0
 
-    def get_nombre(self) -> str: return self.__nombre
+    def get_nombre(self) -> str:
+        return self.__nombre
+
 
 class AgenteCheckIn(EmpleadoAeropuerto):
     def __init__(self, nombre: str, codigo: str, area: str, turno: str, counter_asignado: str):
@@ -258,6 +288,7 @@ class AgenteCheckIn(EmpleadoAeropuerto):
     def realizar_tarea_principal(self) -> str:
         return f"Realizando check-in en counter {self.counter_asignado}"
 
+
 class AgenteSeguridad(EmpleadoAeropuerto):
     def __init__(self, nombre: str, codigo: str, area: str, turno: str, zona_asignada: str):
         super().__init__(nombre, codigo, area, turno)
@@ -270,6 +301,7 @@ class AgenteSeguridad(EmpleadoAeropuerto):
     def realizar_tarea_principal(self) -> str:
         return f"Realizando controles de seguridad en {self.zona_asignada}"
 
+
 class OficialMigracion(EmpleadoAeropuerto):
     def __init__(self, nombre: str, codigo: str, area: str, turno: str):
         super().__init__(nombre, codigo, area, turno)
@@ -280,6 +312,7 @@ class OficialMigracion(EmpleadoAeropuerto):
 
     def realizar_tarea_principal(self) -> str:
         return "Procesando documentación migratoria"
+
 
 class Mantenimiento(EmpleadoAeropuerto):
     def __init__(self, nombre: str, codigo: str, area: str, turno: str, especialidad: str):
@@ -293,115 +326,131 @@ class Mantenimiento(EmpleadoAeropuerto):
     def realizar_tarea_principal(self) -> str:
         return f"Realizando mantenimiento en {self.especialidad}"
 
+
 def main():
     print("=" * 60)
     print("SISTEMA DE AEROPUERTO - COLOMBIA")
     print("=" * 60)
-    
-    # VUELOS DESDE COLOMBIA
-    print("\n1. VUELOS DESDE COLOMBIA")
+
+    # VUELOS DESDE MEDELLÍN Y BOGOTÁ
+    print("\n1. VUELOS DESDE MEDELLÍN Y BOGOTÁ")
     print("-" * 40)
-    
+
     vuelos = [
-        VueloDomestico("AV101", "Medellín", datetime(2024, 6, 15, 8, 0), "Avianca", 1.0, False),
-        VueloDomestico("LA202", "Cartagena", datetime(2024, 6, 16, 10, 0), "LATAM", 1.5, True),
-        VueloDomestico("VH303", "Cali", datetime(2024, 6, 17, 12, 0), "Viva Air", 1.2, False),
-        
-        VueloInternacional("AV501", "Miami", "USA", datetime(2024, 6, 18, 14, 0), "Avianca", True),
-        VueloInternacional("LA602", "Madrid", "España", datetime(2024, 6, 19, 16, 0), "LATAM", False),
-        VueloInternacional("UA703", "Ciudad de México", "México", datetime(2024, 6, 20, 18, 0), "United", True),
-        
-        VueloCarga("FX801", "Miami", datetime(2024, 6, 21, 20, 0), "FedEx", 5000, "electrónicos"),
-        VueloCarga("DHL802", "Santiago", datetime(2024, 6, 22, 22, 0), "DHL", 3000, "documentos"),
-        VueloCarga("UPS803", "Lima", datetime(2024, 6, 23, 6, 0), "UPS", 7000, "farmacéuticos"),
-        
-        VueloPrivado("PJ901", "París", datetime(2024, 6, 24, 10, 0), "Private Jets", "Empresa ABC"),
-        VueloPrivado("PJ902", "Dubai", datetime(2024, 6, 25, 12, 0), "Private Jets", "Familia XYZ"),
-        VueloPrivado("PJ903", "Tokio", datetime(2024, 6, 26, 14, 0), "Private Jets", "Gobierno")
+        # Vuelos desde Bogotá
+        VueloDomestico("BOG101", "Bogotá", "Cartagena", datetime(2025, 6, 15, 8, 0), "Avianca", 1.5, False),
+        VueloDomestico("BOG202", "Bogotá", "Cali", datetime(2021, 6, 16, 10, 0), "LATAM", 1.2, False),
+        VueloDomestico("BOG303", "Bogotá", "Santa Marta", datetime(2024, 6, 17, 12, 0), "Viva Air", 1.8, True),
+
+        VueloInternacional("BOG501", "Bogotá", "Miami", "USA", datetime(2023, 6, 18, 14, 0), "Avianca", True),
+        VueloInternacional("BOG602", "Bogotá", "Madrid", "España", datetime(2023, 6, 19, 16, 0), "LATAM", False),
+        VueloInternacional("BOG703", "Bogotá", "Ciudad de México", "México", datetime(2025, 6, 20, 18, 0), "United",
+                           True),
+
+        # Vuelos desde Medellín
+        VueloDomestico("MDE101", "Medellín", "Bogotá", datetime(2024, 2, 15, 9, 0), "Avianca", 1.0, False),
+        VueloDomestico("MDE202", "Medellín", "Cartagena", datetime(2025, 7, 16, 11, 0), "LATAM", 1.3, True),
+        VueloDomestico("MDE303", "Medellín", "San Andrés", datetime(2022, 8, 17, 13, 0), "Viva Air", 2.0, False),
+
+        VueloInternacional("MDE501", "Medellín", "Miami", "USA", datetime(2010, 5, 18, 15, 0), "Avianca", True),
+        VueloInternacional("MDE602", "Medellín", "Panamá", "Panamá", datetime(2020, 3, 19, 17, 0), "Copa Airlines",
+                           False),
+        VueloInternacional("MDE703", "Medellín", "Lima", "Perú", datetime(2025, 5, 20, 19, 0), "LATAM", False),
+
+        # Vuelos de carga y privados desde ambas ciudades
+        VueloCarga("FX801", "Bogotá", "Miami", datetime(2025, 9, 21, 20, 0), "FedEx", 5000, "electrónicos"),
+        VueloCarga("DHL802", "Medellín", "Santiago", datetime(2025, 8, 22, 22, 0), "DHL", 3000, "documentos"),
+        VueloCarga("UPS803", "Bogotá", "Lima", datetime(2025, 4, 23, 6, 0), "UPS", 7000, "farmacéuticos"),
+
+        VueloPrivado("PJ901", "Bogotá", "París", datetime(2025, 3, 24, 10, 0), "Private Jets", "Empresa ABC"),
+        VueloPrivado("PJ902", "Medellín", "Dubai", datetime(2024, 5, 25, 12, 0), "Private Jets", "Familia XYZ"),
+        VueloPrivado("PJ903", "Bogotá", "Tokio", datetime(2025, 9, 26, 14, 0), "Private Jets", "Gobierno")
     ]
-    
+
     for vuelo in vuelos:
-        print(f"{vuelo.get_numero_vuelo()}: {vuelo.get_origen()} → {vuelo.get_destino()} - ${vuelo.calcular_tarifa_base():.0f}")
-    
-    # PASAJEROS
+        print(
+            f"{vuelo.get_numero_vuelo()}: {vuelo.get_origen()} → {vuelo.get_destino()} - ${vuelo.calcular_tarifa_base():.0f}")
+
+    # PASAJEROS (se mantiene igual)
     print("\n2. PASAJEROS")
     print("-" * 40)
-    
+
     pasajeros = [
         PasajeroEconomico("Carlos López", "CL123456", "Colombiano", 35, "15A"),
         PasajeroEconomico("Ana García", "AG789012", "Colombiana", 28, "16B"),
         PasajeroEconomico("Pedro Martínez", "PM345678", "Colombiano", 42, "17C"),
-        
+
         PasajeroEjecutivo("María Rodríguez", "MR901234", "Colombiana", 45, "2A"),
         PasajeroEjecutivo("José Hernández", "JH567890", "Colombiano", 38, "2B"),
         PasajeroEjecutivo("Laura Díaz", "LD123789", "Colombiana", 41, "2C"),
-        
+
         PasajeroPrimeraClase("Roberto Silva", "RS456123", "Colombiano", 55),
         PasajeroPrimeraClase("Carmen Vargas", "CV789456", "Colombiana", 52),
         PasajeroPrimeraClase("Fernando Castro", "FC123987", "Colombiano", 48),
-        
+
         Tripulacion("Sofia Méndez", "SM654321", "Colombiana", 32, "Comandante"),
         Tripulacion("David Rojas", "DR987654", "Colombiano", 29, "Copiloto"),
         Tripulacion("Elena Torres", "ET321654", "Colombiana", 34, "Azafata")
     ]
-    
-    for i, pasajero in enumerate(pasajeros[:6]):  # Mostrar primeros 6
+
+    for i, pasajero in enumerate(pasajeros[:6]):
         pasajero.agregar_equipaje({"peso_kg": 15, "tipo": "maleta"})
         print(f"{pasajero.get_nombre()}: ${pasajero.calcular_costo_total():.0f}")
-    
-    # SERVICIOS
+
+    # SERVICIOS (se mantiene igual)
     print("\n3. SERVICIOS AEROPORTUARIOS")
     print("-" * 40)
-    
+
     servicios = [
         SalaVIP("SV001", "Terminal 1", time(6, 0)),
         Estacionamiento("EST001", "Terminal 1", time(0, 0)),
         CambioMoneda("CM001", "Hall Principal", time(8, 0)),
         DutyFree("DF001", "Terminal Internacional", time(6, 0))
     ]
-    
+
     for servicio in servicios:
         servicio.registrar_uso("Cliente Ejemplo")
         print(f"{servicio.get_codigo_servicio()}: ${servicio.calcular_tarifa():.0f}")
-    
-    # EMPLEADOS
+
+    # EMPLEADOS (se mantiene igual)
     print("\n4. PERSONAL AEROPORTUARIO")
     print("-" * 40)
-    
+
     empleados = [
         AgenteCheckIn("Luisa Fernández", "ACH001", "Check-In", "diurno", "Counter 5"),
         AgenteCheckIn("Andrés Ramírez", "ACH002", "Check-In", "nocturno", "Counter 6"),
         AgenteCheckIn("Carolina Reyes", "ACH003", "Check-In", "diurno", "Counter 7"),
-        
+
         AgenteSeguridad("Miguel Ortiz", "ASG001", "Seguridad", "nocturno", "Control Metálico"),
         AgenteSeguridad("Patricia Cruz", "ASG002", "Seguridad", "diurno", "Salidas"),
         AgenteSeguridad("Javier Mendoza", "ASG003", "Seguridad", "nocturno", "Llegadas"),
-        
+
         OficialMigracion("Gabriela Peña", "OMG001", "Migración", "mixto"),
         OficialMigracion("Ricardo Guzmán", "OMG002", "Migración", "diurno"),
         OficialMigracion("Daniela Herrera", "OMG003", "Migración", "mixto"),
-        
+
         Mantenimiento("Oscar Núñez", "MNT001", "Mantenimiento", "nocturno", "electricidad"),
         Mantenimiento("Natalia Vega", "MNT002", "Mantenimiento", "diurno", "aviónica"),
         Mantenimiento("Héctor Ríos", "MNT003", "Mantenimiento", "nocturno", "motores")
     ]
-    
-    for empleado in empleados[:6]:  # Mostrar primeros 6
+
+    for empleado in empleados[:6]:
         print(f"{empleado.get_nombre()}: ${empleado.calcular_salario():.0f}")
-    
+
     # REPORTES FINALES
     print("\n5. REPORTES FINALES")
     print("-" * 40)
-    
+
     ingresos_vuelos = sum(v.calcular_tarifa_base() for v in vuelos)
     costos_pasajeros = sum(p.calcular_costo_total() for p in pasajeros)
     ingresos_servicios = sum(s.calcular_tarifa() for s in servicios)
     planilla_total = sum(e.calcular_salario() for e in empleados)
-    
+
     print(f"Ingresos por vuelos: ${ingresos_vuelos:,.0f}")
     print(f"Costos de pasajeros: ${costos_pasajeros:,.0f}")
     print(f"Ingresos por servicios: ${ingresos_servicios:,.0f}")
     print(f"Planilla mensual: ${planilla_total:,.0f}")
+
 
 if __name__ == "__main__":
     main()
